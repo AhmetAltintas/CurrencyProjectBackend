@@ -1,5 +1,4 @@
-﻿
-using Service;
+﻿using Business.Concrete;
 
 static class Program
 {
@@ -12,7 +11,7 @@ static class Program
         DateTime inputtedDate = new DateTime(date.Year,date.Month,date.Day);
 
 
-        Service1 service = new Service1(inputtedDate);
+        ExchRateManager service = new ExchRateManager(inputtedDate);
         service.LoadExchRate();
         Console.WriteLine("Veriler veritabanına eklendi");
         Console.ReadLine();
