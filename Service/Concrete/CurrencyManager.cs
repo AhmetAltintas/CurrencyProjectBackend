@@ -21,7 +21,19 @@ namespace Business.Concrete
 
         public IDataResult<List<CurrencyReport>> GetAllByDate(DateTime? date)
         {
-            return new SuccessDataResult<List<CurrencyReport>>(_currencyDal.GetList(c => c.CurrencyDate == date));
+            DateTime dateTime = date.HasValue ? date.Value : DateTime.MinValue;
+
+            var existingDate = _currencyDal.GetList(c=> c.CurrencyDate == date);
+
+            if (existingDate.Count == 0)
+            {
+                ExchRateManager manager = new ExchRateManager(dateTime);
+
+                manager.LoadExchRate();
+
+                return new SuccessDataResult<List<CurrencyReport>>(_currencyDal.GetList(c => c.CurrencyDate == date));
+            }
+            else return new SuccessDataResult<List<CurrencyReport>>(_currencyDal.GetList(c => c.CurrencyDate == date));
         }
     }
 }
