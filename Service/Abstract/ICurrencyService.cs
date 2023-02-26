@@ -10,6 +10,6 @@ namespace Business.Abstract
 {
     public interface ICurrencyService
     {
-        IDataResult<List<CurrencyReport>> GetAllByDate(DateTime? date);
+        IDataResult<List<CurrencyReport>> GetAllByDate(DateTime date);
     }
 }

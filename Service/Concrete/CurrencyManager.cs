@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Business.Concrete;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -19,21 +20,40 @@ namespace Business.Concrete
             _currencyDal = currencyDal;
         }
 
-        public IDataResult<List<CurrencyReport>> GetAllByDate(DateTime? date)
+        public IDataResult<List<CurrencyReport>> GetAllByDate(DateTime date)
         {
-            DateTime dateTime = date.HasValue ? date.Value : DateTime.MinValue;
-
-            var existingDate = _currencyDal.GetList(c=> c.CurrencyDate == date);
+            var existingDate = _currencyDal.GetList(c => c.CurrencyDate == date);
 
             if (existingDate.Count == 0)
             {
-                ExchRateManager manager = new ExchRateManager(dateTime);
+                int maxDaysToCheck = 5; // Kaç gün geriye gidileceğini belirleyin
+                DateTime currentDate = date;
+                bool dataFound = false;
 
-                manager.LoadExchRate();
+                for (int i = 0; i < maxDaysToCheck; i++)
+                {
+                    ExchRateManager manager = new ExchRateManager(currentDate);
 
-                return new SuccessDataResult<List<CurrencyReport>>(_currencyDal.GetList(c => c.CurrencyDate == date));
+                    try
+                    {
+                        manager.LoadExchRate();
+                        dataFound = true;
+                    }
+                    catch
+                    {
+                        currentDate = currentDate.AddDays(-1);
+                    }
+
+                    if (dataFound)
+                    {
+                        var newDateData = _currencyDal.GetList(c => c.CurrencyDate == currentDate);
+                        return new SuccessDataResult<List<CurrencyReport>>(newDateData);
+                    }
+                }
+
+                return new ErrorDataResult<List<CurrencyReport>>("There is no data available for the last " + maxDaysToCheck + " days.");
             }
-            else return new SuccessDataResult<List<CurrencyReport>>(_currencyDal.GetList(c => c.CurrencyDate == date));
+            else return new SuccessDataResult<List<CurrencyReport>>(existingDate);
         }
     }
 }

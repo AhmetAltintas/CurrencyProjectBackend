@@ -31,14 +31,6 @@ namespace Business.Concrete
         public DateTime CurrencyDate { get; set; }
 
 
-        /// TCMB'den kurun alındığı gerçek tarih
-        public DateTime ActualCurrencyDate { get; set; }
-
-
-        /// Kullanıcının belirttiği tarihte kur yok ise geçmişe doğru kontrol edilecek gün sayısı
-        private const int ExchRateAttempts = 5;
-
-
         /// Çekilen kur verisinin saklandığı değişken
         private XmlDocument XmlDoc { get; set; }
 
@@ -53,82 +45,43 @@ namespace Business.Concrete
         /// Belirtilen tarihe göre kullanılacak api url'i oluşturulur
         private void GenerateApiUrl()
         {
-            ApiUrl = string.Format(ApiBaseUrl, ActualCurrencyDate.ToString("yyyyMM") + "/" + ActualCurrencyDate.ToString("ddMMyyyy"));
+            ApiUrl = string.Format(ApiBaseUrl, CurrencyDate.ToString("yyyyMM") + "/" + CurrencyDate.ToString("ddMMyyyy"));
         }
 
 
         /// Belirtilen tarihteki TCMB'deki bütün kurları çeker
         public void LoadExchRate()
         {
-            ActualCurrencyDate = CurrencyDate;
+            GenerateApiUrl();
 
-            // kullanıcının belirttiği tarihte kur var ise alınır
-            // yok ise en yakın kur olan gün bulunur
-            for (int attempts = 0; attempts < ExchRateAttempts; attempts++)
+            XmlDoc = new XmlDocument();
+            XmlDoc.Load(ApiUrl);
+
+            DataSet ds = new DataSet();
+            ds.ReadXml(new XmlNodeReader(XmlDoc));
+
+            using (CurrencyContext entity = new CurrencyContext())
             {
-                try
+                List<CurrencyReport> NewDatas = new List<CurrencyReport>();
+                //Çekilen data Insert edilir..
+                foreach (DataRow drow in ds.Tables[1].Rows)
                 {
-                    GenerateApiUrl();
-
-                    XmlDoc = new XmlDocument();
-                    XmlDoc.Load(ApiUrl);
-
-                    DataSet ds = new DataSet();
-                    ds.ReadXml(new XmlNodeReader(XmlDoc));
-
-                    using (CurrencyContext entity = new CurrencyContext())
+                    if (drow["Isim"].ToString().Trim() != "")
                     {
-                        List<CurrencyReport> NewDatas = new List<CurrencyReport>();
-                        //Çekilen data Insert edilir..
-                        foreach (DataRow drow in ds.Tables[1].Rows)
-                        {
-                            if (drow["Isim"].ToString().Trim() != "")
-                            {
-                                CurrencyReport report = new CurrencyReport();
-                                report.CurrencyName = drow["Isim"].ToString();
-                                report.ForexBuying = decimal.Parse(drow["ForexBuying"].ToString() != "" ? drow["ForexBuying"].ToString().Replace(".", ",") : "0");
-                                report.ForexSelling = decimal.Parse(drow["ForexSelling"].ToString() != "" ? drow["ForexSelling"].ToString().Replace(".", ",") : "0");
-                                report.BanknoteBuying = decimal.Parse(drow["BanknoteBuying"].ToString() != "" ? drow["BanknoteBuying"].ToString().Replace(".", ",") : "0");
-                                report.BanknoteSelling = decimal.Parse(drow["BanknoteSelling"].ToString() != "" ? drow["BanknoteSelling"].ToString().Replace(".", ",") : "0");
-                                report.CrossRateUSD = decimal.Parse(drow["CrossRateUSD"].ToString() != "" ? drow["CrossRateUSD"].ToString().Replace(".", ",") : "0");
-                                report.CurrencyDate = ActualCurrencyDate;
-                                entity.CurrencyReport.Add(report);
-                                NewDatas.Add(report);
-                            }
-                        }
-                        entity.SaveChanges();
-
-                    }
-
-                    break;
-                }
-                catch (WebException ex)
-                {
-                    if (ex.Response != null)
-                    {
-                        // 404 not found
-                        HttpWebResponse errorResponse = ex.Response as HttpWebResponse;
-                        if (errorResponse.StatusCode == HttpStatusCode.NotFound)
-                        {
-                            // bir gün öncesi kontrol edilir
-                            ActualCurrencyDate = ActualCurrencyDate.AddDays(-1);
-                        }
-                        else
-                        {
-                            throw new Exception("Kur bilgisi bulunamadı.");
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception("Kur bilgisi bulunamadı.");
+                        CurrencyReport report = new CurrencyReport();
+                        report.CurrencyName = drow["Isim"].ToString();
+                        report.ForexBuying = decimal.Parse(drow["ForexBuying"].ToString() != "" ? drow["ForexBuying"].ToString().Replace(".", ",") : "0");
+                        report.ForexSelling = decimal.Parse(drow["ForexSelling"].ToString() != "" ? drow["ForexSelling"].ToString().Replace(".", ",") : "0");
+                        report.BanknoteBuying = decimal.Parse(drow["BanknoteBuying"].ToString() != "" ? drow["BanknoteBuying"].ToString().Replace(".", ",") : "0");
+                        report.BanknoteSelling = decimal.Parse(drow["BanknoteSelling"].ToString() != "" ? drow["BanknoteSelling"].ToString().Replace(".", ",") : "0");
+                        report.CrossRateUSD = decimal.Parse(drow["CrossRateUSD"].ToString() != "" ? drow["CrossRateUSD"].ToString().Replace(".", ",") : "0");
+                        report.CurrencyDate = CurrencyDate;
+                        entity.CurrencyReport.Add(report);
+                        NewDatas.Add(report);
                     }
                 }
-            }
+                entity.SaveChanges();
 
-
-            if (XmlDoc == null)
-            {
-                throw new Exception("Kur bilgisi bulunamadı.");
             }
         }
 
