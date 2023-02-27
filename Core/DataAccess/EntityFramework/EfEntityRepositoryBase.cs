@@ -8,9 +8,17 @@ namespace Core.DataAccess.EntityFramework
         where TEntity : class, IEntity, new()
         where TContext : DbContext, new()
     {
+
+        public List<TEntity> GetList(Expression<Func<TEntity, bool>> filter)
+        {
+            using (TContext context = new TContext())
+            {
+                return context.Set<TEntity>().Where(filter).ToList();
+            }
+        }
+
         public void Add(TEntity entity)
         {
-            //IDisposable pattern implementation of c#
             using (TContext context = new TContext())
             {
                 var addedEntity = context.Entry(entity);
@@ -45,14 +53,6 @@ namespace Core.DataAccess.EntityFramework
                 return filter == null
                     ? context.Set<TEntity>().ToList()
                     : context.Set<TEntity>().Where(filter).ToList();
-            }
-        }
-
-        public List<TEntity> GetList(Expression<Func<TEntity, bool>> filter)
-        {
-            using (TContext context = new TContext())
-            {
-                return context.Set<TEntity>().Where(filter).ToList();
             }
         }
 

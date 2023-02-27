@@ -19,19 +19,22 @@ namespace Business.Concrete
         {
             _currencyDal = currencyDal;
         }
-
         public IDataResult<List<CurrencyReport>> GetAllByDate(DateTime date)
         {
-            var existingDate = _currencyDal.GetList(c => c.CurrencyDate == date);
 
-            if (existingDate.Count == 0)
+            int maxDaysToCheck = 5; // Kaç gün geriye gidileceğini belirleyin
+            bool dataFound = false;
+
+
+            for (int i = 0; i < maxDaysToCheck; i++)
             {
-                int maxDaysToCheck = 5; // Kaç gün geriye gidileceğini belirleyin
-                DateTime currentDate = date;
-                bool dataFound = false;
+                DateTime dateOnly = date.Date;
+                var existingDate = _currencyDal.GetList(c => c.CurrencyDate == dateOnly);
 
-                for (int i = 0; i < maxDaysToCheck; i++)
+                if (existingDate.Count == 0)
                 {
+
+                    DateTime currentDate = date;
                     ExchRateManager manager = new ExchRateManager(currentDate);
 
                     try
@@ -46,14 +49,16 @@ namespace Business.Concrete
 
                     if (dataFound)
                     {
-                        var newDateData = _currencyDal.GetList(c => c.CurrencyDate == currentDate);
+                        var newDateData = _currencyDal.GetList(c => c.CurrencyDate == currentDate.Date);
                         return new SuccessDataResult<List<CurrencyReport>>(newDateData);
                     }
-                }
 
-                return new ErrorDataResult<List<CurrencyReport>>("There is no data available for the last " + maxDaysToCheck + " days.");
+                }
+                else return new SuccessDataResult<List<CurrencyReport>>(existingDate);
+
             }
-            else return new SuccessDataResult<List<CurrencyReport>>(existingDate);
+
+            return new ErrorDataResult<List<CurrencyReport>>("There is no data available for the last " + maxDaysToCheck + " days.");
         }
     }
 }
