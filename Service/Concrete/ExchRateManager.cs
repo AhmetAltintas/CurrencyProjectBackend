@@ -70,11 +70,11 @@ namespace Business.Concrete
                     {
                         CurrencyReport report = new CurrencyReport();
                         report.CurrencyName = drow["Isim"].ToString();
-                        report.ForexBuying = decimal.Parse(drow["ForexBuying"].ToString() != "" ? drow["ForexBuying"].ToString().Replace(".", ",") : "0");
-                        report.ForexSelling = decimal.Parse(drow["ForexSelling"].ToString() != "" ? drow["ForexSelling"].ToString().Replace(".", ",") : "0");
-                        report.BanknoteBuying = decimal.Parse(drow["BanknoteBuying"].ToString() != "" ? drow["BanknoteBuying"].ToString().Replace(".", ",") : "0");
-                        report.BanknoteSelling = decimal.Parse(drow["BanknoteSelling"].ToString() != "" ? drow["BanknoteSelling"].ToString().Replace(".", ",") : "0");
-                        report.CrossRateUSD = decimal.Parse(drow["CrossRateUSD"].ToString() != "" ? drow["CrossRateUSD"].ToString().Replace(".", ",") : "0");
+                        report.ForexBuying = drow["ForexBuying"].ToString() != "" ? decimal.Parse(drow["ForexBuying"].ToString().Replace(".", ",")) : (decimal?)null;
+                        report.ForexSelling = drow["ForexSelling"].ToString() != "" ? decimal.Parse(drow["ForexSelling"].ToString().Replace(".", ",")) : (decimal?)null;
+                        report.BanknoteBuying = drow["BanknoteBuying"].ToString() != "" ? decimal.Parse(drow["BanknoteBuying"].ToString().Replace(".", ",")) : (decimal?)null;
+                        report.BanknoteSelling = drow["BanknoteSelling"].ToString() != "" ? decimal.Parse(drow["BanknoteSelling"].ToString().Replace(".", ",")) : (decimal?)null;
+                        report.CrossRateUSD = drow["CrossRateUSD"].ToString() != "" ? decimal.Parse(drow["CrossRateUSD"].ToString().Replace(".", ",")) : (decimal?)null;
                         report.CurrencyDate = CurrencyDate;
                         entity.CurrencyReport.Add(report);
                         NewDatas.Add(report);

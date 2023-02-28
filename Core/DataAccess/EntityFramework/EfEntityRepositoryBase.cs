@@ -8,7 +8,6 @@ namespace Core.DataAccess.EntityFramework
         where TEntity : class, IEntity, new()
         where TContext : DbContext, new()
     {
-
         public List<TEntity> GetList(Expression<Func<TEntity, bool>> filter)
         {
             using (TContext context = new TContext())
