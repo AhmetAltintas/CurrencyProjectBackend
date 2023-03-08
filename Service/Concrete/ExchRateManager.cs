@@ -70,6 +70,7 @@ namespace Business.Concrete
                     {
                         CurrencyReport report = new CurrencyReport();
                         report.CurrencyName = drow["Isim"].ToString();
+                        report.CurrencyCode = drow["CurrencyCode"].ToString();
                         report.ForexBuying = drow["ForexBuying"].ToString() != "" ? decimal.Parse(drow["ForexBuying"].ToString().Replace(".", ",")) : (decimal?)null;
                         report.ForexSelling = drow["ForexSelling"].ToString() != "" ? decimal.Parse(drow["ForexSelling"].ToString().Replace(".", ",")) : (decimal?)null;
                         report.BanknoteBuying = drow["BanknoteBuying"].ToString() != "" ? decimal.Parse(drow["BanknoteBuying"].ToString().Replace(".", ",")) : (decimal?)null;
